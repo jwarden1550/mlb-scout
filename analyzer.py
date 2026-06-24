@@ -11,20 +11,20 @@ def _get_client():
 def search_player(player_name):
     """Search for a player by name and return their ID."""
     url = "https://statsapi.mlb.com/api/v1/sports/1/players"
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     data = response.json()
-    
+
     name_lower = player_name.lower()
     for player in data["people"]:
         if name_lower in player["fullName"].lower():
             return player["id"], player["fullName"]
-    
+
     return None, None
 
 def get_player_stats(player_id):
     """Get hitting or pitching stats for a player."""
     url = f"https://statsapi.mlb.com/api/v1/people/{player_id}?hydrate=stats(group=[hitting,pitching],type=season)"
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     data = response.json()
     
     player = data["people"][0]
@@ -81,7 +81,7 @@ Player Data:
 """
     
     response = _get_client().models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-1.5-flash",
         contents=prompt
     )
     return response.text
