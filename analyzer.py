@@ -84,10 +84,13 @@ Player Data:
         response = requests.post(
             GEMINI_URL,
             json=payload,
-            headers={"x-goog-api-key": api_key},
+            params={"key": api_key},
             timeout=30
         )
-        response.raise_for_status()
+        if not response.ok:
+            raise RuntimeError(f"Gemini API error: {response.status_code} {response.reason} — {response.text[:200]}")
         return response.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except requests.HTTPError as e:
-        raise RuntimeError(f"Gemini API error: {e.response.status_code} {e.response.reason}")
+    except RuntimeError:
+        raise
+    except Exception as e:
+        raise RuntimeError(f"Gemini request failed: {type(e).__name__}")
