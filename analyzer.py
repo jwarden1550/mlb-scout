@@ -67,7 +67,7 @@ def generate_scouting_report(player_data):
 
     api_key = os.environ["GROQ_API_KEY"]
     payload = {
-        "model": "llama-3.1-70b-versatile",
+        "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 600,
         "temperature": 0.7
