@@ -61,15 +61,27 @@ def generate_scouting_report(player_data):
     """Send pre-filtered player stats to Gemini and get a scouting report back."""
     concise = _filter_stats(player_data)
 
-    prompt = f"""MLB scout report. Sections: Overview, Physical, Stats, Strengths, Development, Comparable Player, Grade (20-80 scale), Recommendation (Sign/Monitor/Pass). Be concise.
+    prompt = f"""You are a professional MLB scout with 20 years of experience.
+Based on the following player data and statistics, write a detailed scouting report.
 
+Structure your report with these sections:
+- Player Overview
+- Physical Profile
+- Statistical Analysis
+- Strengths
+- Areas for Development
+- Comparison to Similar Players
+- Overall Scout Grade (20-80 scale, like real MLB scouting)
+- Recommendation (Sign / Monitor / Pass)
+
+Player Data:
 {concise}"""
 
     api_key = os.environ["GROQ_API_KEY"]
     payload = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 600,
+        "max_tokens": 1500,
         "temperature": 0.7
     }
     try:
