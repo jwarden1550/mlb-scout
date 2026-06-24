@@ -4,9 +4,25 @@
     "api/index.py": { "maxDuration": 60 },
     "api/cron.py": { "maxDuration": 30 }
   },
-  "rewrites": [
-    { "source": "/api/cron", "destination": "/api/cron" },
-    { "source": "/(.*)", "destination": "/api/index" }
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/cron.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/cron",
+      "dest": "api/cron.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
   ],
   "crons": [
     {
