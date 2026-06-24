@@ -271,7 +271,13 @@
                     body: JSON.stringify({ player_name: playerName })
                 });
 
-                const data = await response.json();
+                let data;
+                try {
+                    data = await response.json();
+                } catch {
+                    setStatus("The server took too long to respond. Please try again.", true);
+                    return;
+                }
 
                 if (!response.ok) {
                     setStatus(data.error || "Something went wrong.", true);
