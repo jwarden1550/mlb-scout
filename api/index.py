@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, render_template, request, jsonify
 from analyzer import search_player, get_player_stats, generate_scouting_report
-from database import init_db, save_report
+from database import init_db, save_report, get_cached_report
 
 app = Flask(__name__, template_folder="../templates")
 
@@ -29,6 +29,14 @@ def scout():
 
     if not player_id:
         return jsonify({"error": f"Player '{player_name}' not found. Try their full name."}), 404
+
+    try:
+        cached = get_cached_report(full_name)
+    except Exception:
+        cached = None
+
+    if cached:
+        return jsonify({"player_name": full_name, "report": cached, "cached": True})
 
     stats = get_player_stats(player_id)
     report = generate_scouting_report(stats)

@@ -47,10 +47,23 @@ def get_player_stats(player_id):
     
     return result
 
+HITTING_KEYS = {"gamesPlayed", "atBats", "avg", "obp", "slg", "ops", "homeRuns", "rbi", "stolenBases", "strikeOuts", "baseOnBalls"}
+PITCHING_KEYS = {"gamesPlayed", "gamesStarted", "era", "whip", "inningsPitched", "strikeOuts", "wins", "losses", "saves", "homeRunsPer9", "strikeoutsPer9"}
+
+def _filter_stats(player_data):
+    filtered = {k: v for k, v in player_data.items() if k != "stats"}
+    filtered["stats"] = []
+    for stat_block in player_data.get("stats", []):
+        keys = HITTING_KEYS if "avg" in stat_block else PITCHING_KEYS
+        filtered["stats"].append({k: stat_block[k] for k in keys if k in stat_block})
+    return filtered
+
+
 def generate_scouting_report(player_data):
-    """Send player stats to Gemini and get a scouting report back."""
-    
-    prompt = f"""You are a professional MLB scout with 20 years of experience. 
+    """Send pre-filtered player stats to Gemini and get a scouting report back."""
+    concise = _filter_stats(player_data)
+
+    prompt = f"""You are a professional MLB scout with 20 years of experience.
 Based on the following player data and statistics, write a detailed scouting report.
 
 Structure your report with these sections:
@@ -64,7 +77,7 @@ Structure your report with these sections:
 - Recommendation (Sign / Monitor / Pass)
 
 Player Data:
-{player_data}
+{concise}
 """
     
     response = _get_client().models.generate_content(

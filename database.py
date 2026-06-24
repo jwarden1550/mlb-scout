@@ -36,6 +36,26 @@ def save_report(player_name, report):
     return report_id
 
 
+def get_cached_report(player_name):
+    """Return a report generated within the last 24 hours for this player, or None."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT report FROM reports
+        WHERE LOWER(player_name) = LOWER(%s)
+          AND created_at > NOW() - INTERVAL '24 hours'
+        ORDER BY created_at DESC
+        LIMIT 1
+        """,
+        (player_name,)
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row[0] if row else None
+
+
 def get_recent_reports(limit=10):
     conn = get_connection()
     cur = conn.cursor()
