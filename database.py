@@ -17,6 +17,14 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS watched_players (
+            id SERIAL PRIMARY KEY,
+            player_name TEXT NOT NULL,
+            player_id INTEGER NOT NULL UNIQUE,
+            added_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
     conn.commit()
     cur.close()
     conn.close()
@@ -93,3 +101,39 @@ def get_report_by_id(report_id):
     cur.close()
     conn.close()
     return row[0] if row else None
+
+
+def add_watched_player(player_name, player_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO watched_players (player_name, player_id) VALUES (%s, %s) ON CONFLICT (player_id) DO NOTHING",
+        (player_name, player_id)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def remove_watched_player(player_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM watched_players WHERE player_id = %s",
+        (player_id,)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+def get_watched_players():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, player_name, player_id FROM watched_players ORDER BY player_name"
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows

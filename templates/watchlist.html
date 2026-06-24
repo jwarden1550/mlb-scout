@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch List — MLB Scout</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Georgia', serif; background-color: #0a1628; color: #e8e8e8; min-height: 100vh; }
+
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 32px; height: 56px; background: #0d1e38;
+            border-bottom: 1px solid #1e3a5f; position: sticky; top: 0; z-index: 50;
+        }
+        .nav-brand { font-size: 1.1rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #c8a44a; text-decoration: none; }
+        .dropdown { position: relative; }
+        .dropdown-toggle { background: transparent; border: 1px solid #1e3a5f; color: #e8e8e8; font-family: inherit; font-size: 0.9rem; padding: 7px 14px; border-radius: 5px; cursor: pointer; transition: border-color 0.2s; }
+        .dropdown-toggle:hover { border-color: #c8a44a; color: #c8a44a; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); background: #112240; border: 1px solid #1e3a5f; border-radius: 6px; min-width: 160px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-menu a { display: block; padding: 11px 18px; color: #ccd6e8; text-decoration: none; font-size: 0.88rem; transition: background 0.15s, color 0.15s; }
+        .dropdown-menu a:hover { background: #1e3a5f; color: #c8a44a; }
+        .dropdown-menu a.danger { color: #e05a5a; }
+        .dropdown-menu a.danger:hover { background: #2a1010; }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+
+        header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #c8a44a; padding-bottom: 24px; }
+        header h1 { font-size: 2rem; color: #c8a44a; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+        header p { color: #8a9ab5; font-size: 0.95rem; }
+
+        .info-card {
+            background: #112240; border: 1px solid #1e3a5f; border-radius: 8px;
+            padding: 16px 24px; margin-bottom: 24px; color: #8a9ab5; font-size: 0.88rem; line-height: 1.6;
+        }
+        .info-card strong { color: #c8a44a; }
+
+        .add-section {
+            background: #112240; border: 1px solid #1e3a5f; border-radius: 8px;
+            padding: 24px 32px; margin-bottom: 24px;
+        }
+        .add-section label {
+            display: block; font-size: 0.85rem; letter-spacing: 1px;
+            text-transform: uppercase; color: #8a9ab5; margin-bottom: 10px;
+        }
+        .input-row { display: flex; gap: 12px; }
+        .input-row input {
+            flex: 1; padding: 12px 16px; background: #0a1628; border: 1px solid #1e3a5f;
+            border-radius: 6px; color: #e8e8e8; font-size: 1rem; font-family: inherit;
+            outline: none; transition: border-color 0.2s;
+        }
+        .input-row input:focus { border-color: #c8a44a; }
+        .input-row input::placeholder { color: #4a5a70; }
+        .input-row button {
+            padding: 12px 24px; background: #c8a44a; color: #0a1628; border: none;
+            border-radius: 6px; font-size: 0.9rem; font-weight: bold; font-family: inherit;
+            letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .input-row button:hover { background: #e0b85a; }
+        .input-row button:disabled { background: #4a5a70; cursor: not-allowed; }
+        .add-status { margin-top: 10px; font-size: 0.88rem; color: #8a9ab5; min-height: 18px; }
+        .add-status.error { color: #e05a5a; }
+        .add-status.success { color: #6dd56d; }
+
+        .players-section { background: #112240; border: 1px solid #1e3a5f; border-radius: 8px; overflow: hidden; }
+        .section-header {
+            padding: 14px 20px; background: #0d1e38;
+            font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; color: #8a9ab5;
+        }
+        .empty-state { padding: 48px 32px; text-align: center; color: #8a9ab5; font-size: 0.95rem; }
+
+        .player-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-top: 1px solid #1e3a5f; transition: background 0.15s;
+        }
+        .player-row:hover { background: #0d1e38; }
+        .player-info { display: flex; flex-direction: column; gap: 3px; }
+        .player-name { font-size: 1rem; color: #e8e8e8; font-weight: bold; }
+        .player-meta { font-size: 0.8rem; color: #8a9ab5; }
+        .remove-btn {
+            padding: 6px 14px; background: transparent; color: #e05a5a;
+            border: 1px solid #e05a5a; border-radius: 5px; font-size: 0.8rem;
+            font-family: inherit; font-weight: bold; letter-spacing: 1px;
+            text-transform: uppercase; cursor: pointer; transition: background 0.2s, color 0.2s;
+        }
+        .remove-btn:hover { background: #e05a5a; color: #0a1628; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a class="nav-brand" href="/">MLB Scout</a>
+        <div class="dropdown">
+            <button class="dropdown-toggle">{{ username }} ▾</button>
+            <div class="dropdown-menu">
+                <a href="/">New Report</a>
+                <a href="/reports">Saved Reports</a>
+                <a href="/watchlist">Watch List</a>
+                <a href="/logout" class="danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>Watch List</h1>
+            <p>Players tracked for weekly automated reports</p>
+        </header>
+
+        <div class="info-card">
+            <strong>Weekly Reports:</strong> Every Monday at 6am UTC, a fresh scouting report is automatically generated for each player on this list and saved to your <a href="/reports" style="color:#c8a44a;">Saved Reports</a>.
+        </div>
+
+        <div class="add-section">
+            <label for="addInput">Add Player to Watch List</label>
+            <div class="input-row">
+                <input type="text" id="addInput" placeholder="e.g. Aaron Judge, Freddie Freeman" autocomplete="off" />
+                <button id="addBtn" onclick="addPlayer()">Add Player</button>
+            </div>
+            <div class="add-status" id="addStatus"></div>
+        </div>
+
+        <div class="players-section">
+            <div class="section-header">Watched Players</div>
+            <div id="playersList">
+                {% if players %}
+                    {% for player in players %}
+                    <div class="player-row" id="row-{{ player[2] }}">
+                        <div class="player-info">
+                            <span class="player-name">{{ player[1] }}</span>
+                            <span class="player-meta">Player ID: {{ player[2] }}</span>
+                        </div>
+                        <button class="remove-btn" onclick="removePlayer({{ player[2] }}, '{{ player[1] | e }}')">Remove</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state" id="emptyState">No players on watch list yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("addInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") addPlayer();
+        });
+
+        function setAddStatus(msg, type = '') {
+            const el = document.getElementById("addStatus");
+            el.textContent = msg;
+            el.className = "add-status" + (type ? ' ' + type : '');
+        }
+
+        async function addPlayer() {
+            const input = document.getElementById("addInput");
+            const btn = document.getElementById("addBtn");
+            const name = input.value.trim();
+            if (!name) { setAddStatus("Please enter a player name.", "error"); return; }
+
+            btn.disabled = true;
+            setAddStatus("Searching for player...");
+
+            try {
+                const response = await fetch("/watchlist/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ player_name: name })
+                });
+                const data = await response.json();
+                if (!response.ok) { setAddStatus(data.error || "Error adding player.", "error"); return; }
+
+                setAddStatus(`${data.player_name} added to watch list.`, "success");
+                input.value = "";
+
+                // Remove empty state if present
+                const empty = document.getElementById("emptyState");
+                if (empty) empty.remove();
+
+                // Add row to list
+                const list = document.getElementById("playersList");
+                const row = document.createElement("div");
+                row.className = "player-row";
+                row.id = `row-${data.player_id}`;
+                row.innerHTML = `
+                    <div class="player-info">
+                        <span class="player-name">${data.player_name}</span>
+                        <span class="player-meta">Player ID: ${data.player_id}</span>
+                    </div>
+                    <button class="remove-btn" onclick="removePlayer(${data.player_id}, '${data.player_name.replace(/'/g, "\\'")}')">Remove</button>
+                `;
+                list.appendChild(row);
+
+            } catch { setAddStatus("Could not connect to the server.", "error"); }
+            finally { btn.disabled = false; }
+        }
+
+        async function removePlayer(playerId, playerName) {
+            if (!confirm(`Remove ${playerName} from watch list?`)) return;
+            try {
+                const response = await fetch(`/watchlist/remove/${playerId}`, { method: "POST" });
+                if (response.ok) {
+                    const row = document.getElementById(`row-${playerId}`);
+                    if (row) row.remove();
+                    const list = document.getElementById("playersList");
+                    if (!list.querySelector(".player-row")) {
+                        list.innerHTML = '<div class="empty-state" id="emptyState">No players on watch list yet.</div>';
+                    }
+                }
+            } catch { alert("Could not remove player. Please try again."); }
+        }
+    </script>
+</body>
+</html>

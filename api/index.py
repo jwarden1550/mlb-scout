@@ -4,7 +4,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from analyzer import search_player, get_player_stats, generate_scouting_report
-from database import init_db, save_report, get_cached_report, get_all_reports, get_report_by_id
+from database import (
+    init_db, save_report, get_cached_report, get_all_reports, get_report_by_id,
+    add_watched_player, remove_watched_player, get_watched_players
+)
 
 app = Flask(__name__, template_folder="../templates")
 app.secret_key = os.environ.get("SECRET_KEY", "mlb-scout-secret")
@@ -33,6 +36,10 @@ def login_required_api(f):
             return jsonify({"error": "Unauthorized"}), 401
         return f(*args, **kwargs)
     return decorated
+
+
+def get_username():
+    return os.environ.get("ADMIN_USERNAME", "Scout")
 
 
 @app.errorhandler(Exception)
@@ -64,7 +71,7 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html")
+    return render_template("index.html", username=get_username())
 
 @app.route("/reports")
 @login_required
@@ -73,7 +80,7 @@ def reports():
         all_reports = get_all_reports()
     except Exception:
         all_reports = []
-    return render_template("reports.html", reports=all_reports)
+    return render_template("reports.html", reports=all_reports, username=get_username())
 
 @app.route("/reports/<int:report_id>")
 @login_required_api
@@ -85,6 +92,40 @@ def get_report(report_id):
     if report_text is None:
         return jsonify({"error": "Report not found"}), 404
     return jsonify({"report": report_text})
+
+@app.route("/watchlist")
+@login_required
+def watchlist():
+    try:
+        players = get_watched_players()
+    except Exception:
+        players = []
+    return render_template("watchlist.html", players=players, username=get_username())
+
+@app.route("/watchlist/add", methods=["POST"])
+@login_required_api
+def add_to_watchlist():
+    try:
+        data = request.get_json()
+        player_name = data.get("player_name", "").strip()
+        if not player_name:
+            return jsonify({"error": "Please enter a player name."}), 400
+        player_id, full_name = search_player(player_name)
+        if not player_id:
+            return jsonify({"error": f"Player '{player_name}' not found. Try their full name."}), 404
+        add_watched_player(full_name, player_id)
+        return jsonify({"success": True, "player_name": full_name, "player_id": player_id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/watchlist/remove/<int:player_id>", methods=["POST"])
+@login_required_api
+def remove_from_watchlist(player_id):
+    try:
+        remove_watched_player(player_id)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/scout", methods=["POST"])
 @login_required_api
