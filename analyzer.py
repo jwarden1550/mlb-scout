@@ -61,25 +61,15 @@ def generate_scouting_report(player_data):
     """Send pre-filtered player stats to Gemini and get a scouting report back."""
     concise = _filter_stats(player_data)
 
-    prompt = f"""You are a professional MLB scout with 20 years of experience.
-Based on the following player data and statistics, write a detailed scouting report.
+    prompt = f"""MLB scout report. Sections: Overview, Physical, Stats, Strengths, Development, Comparable Player, Grade (20-80 scale), Recommendation (Sign/Monitor/Pass). Be concise.
 
-Structure your report with these sections:
-- Player Overview
-- Physical Profile
-- Statistical Analysis
-- Strengths
-- Areas for Development
-- Comparison to Similar Players
-- Overall Scout Grade (20-80 scale, like real MLB scouting)
-- Recommendation (Sign / Monitor / Pass)
+{concise}"""
 
-Player Data:
-{concise}
-"""
-    
     api_key = os.environ["GOOGLE_API_KEY"]
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"maxOutputTokens": 600}
+    }
     try:
         response = requests.post(
             GEMINI_URL,
