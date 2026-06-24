@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 def search_player(player_name):
     """Search for a player by name and return their ID."""
@@ -65,22 +65,24 @@ def generate_scouting_report(player_data):
 
 {concise}"""
 
-    api_key = os.environ["GOOGLE_API_KEY"]
+    api_key = os.environ["GROQ_API_KEY"]
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"maxOutputTokens": 600}
+        "model": "llama-3.1-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 600,
+        "temperature": 0.7
     }
     try:
         response = requests.post(
-            GEMINI_URL,
+            GROQ_URL,
             json=payload,
-            params={"key": api_key},
+            headers={"Authorization": f"Bearer {api_key}"},
             timeout=30
         )
         if not response.ok:
-            raise RuntimeError(f"Gemini API error: {response.status_code} {response.reason} — {response.text[:200]}")
-        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            raise RuntimeError(f"Groq API error: {response.status_code} {response.reason} — {response.text[:200]}")
+        return response.json()["choices"][0]["message"]["content"]
     except RuntimeError:
         raise
     except Exception as e:
-        raise RuntimeError(f"Gemini request failed: {type(e).__name__}")
+        raise RuntimeError(f"Groq request failed: {type(e).__name__}")

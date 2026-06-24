@@ -60,7 +60,7 @@ def scout():
     except Exception as e:
         msg = str(e)
         # Strip any API keys that may appear in URLs within error messages
-        api_key = os.environ.get("GOOGLE_API_KEY", "")
+        api_key = os.environ.get("GROQ_API_KEY", "")
         if api_key:
             msg = msg.replace(api_key, "[REDACTED]")
         return jsonify({"error": f"Failed to generate report: {msg}"}), 500
