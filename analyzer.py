@@ -80,11 +80,14 @@ Player Data:
     
     api_key = os.environ["GOOGLE_API_KEY"]
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    response = requests.post(
-        GEMINI_URL,
-        json=payload,
-        params={"key": api_key},
-        timeout=30
-    )
-    response.raise_for_status()
-    return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    try:
+        response = requests.post(
+            GEMINI_URL,
+            json=payload,
+            headers={"x-goog-api-key": api_key},
+            timeout=30
+        )
+        response.raise_for_status()
+        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except requests.HTTPError as e:
+        raise RuntimeError(f"Gemini API error: {e.response.status_code} {e.response.reason}")

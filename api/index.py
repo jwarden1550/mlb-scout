@@ -58,7 +58,12 @@ def scout():
         return jsonify({"player_name": full_name, "report": report})
 
     except Exception as e:
-        return jsonify({"error": f"Failed to generate report: {str(e)}"}), 500
+        msg = str(e)
+        # Strip any API keys that may appear in URLs within error messages
+        api_key = os.environ.get("GOOGLE_API_KEY", "")
+        if api_key:
+            msg = msg.replace(api_key, "[REDACTED]")
+        return jsonify({"error": f"Failed to generate report: {msg}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
