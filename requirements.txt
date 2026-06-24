@@ -1,6 +1,6 @@
 flask
 requests
-google-genai
+google-generativeai
 python-dotenv
 gunicorn
 psycopg2-binary
