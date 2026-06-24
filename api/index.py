@@ -8,7 +8,10 @@ from database import init_db, save_report
 
 app = Flask(__name__, template_folder="../templates")
 
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"DB init warning: {e}")
 
 @app.route("/")
 def index():
@@ -30,7 +33,10 @@ def scout():
     stats = get_player_stats(player_id)
     report = generate_scouting_report(stats)
 
-    save_report(full_name, report)
+    try:
+        save_report(full_name, report)
+    except Exception as e:
+        print(f"DB save warning: {e}")
 
     return jsonify({
         "player_name": full_name,

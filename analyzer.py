@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+def _get_client():
+    return genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
 
 def search_player(player_name):
     """Search for a player by name and return their ID."""
@@ -66,7 +67,7 @@ Player Data:
 {player_data}
 """
     
-    response = client.models.generate_content(
+    response = _get_client().models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt
     )
