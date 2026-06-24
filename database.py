@@ -67,3 +67,29 @@ def get_recent_reports(limit=10):
     cur.close()
     conn.close()
     return rows
+
+
+def get_all_reports(limit=50):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, player_name, created_at FROM reports ORDER BY created_at DESC LIMIT %s",
+        (limit,)
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+
+def get_report_by_id(report_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT report FROM reports WHERE id = %s",
+        (report_id,)
+    )
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row[0] if row else None
